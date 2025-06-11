@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Layered Random Password</title>
+</head>
+<body>
+  <button onclick="generatePassword()">Generate Password</button>
+  <button onclick="copyPassword()">Copy</button>
+  <p id="password" style="font-family: monospace;"></p>
+
+  <script>
+    function getRandomCharPool(length) {
+      const chars = '!#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~';
+      const arr = new Uint32Array(length);
+      crypto.getRandomValues(arr);
+      return Array.from(arr).map(x => chars[x % chars.length]).join('');
+    }
+
+    function generatePassword() {
+      const finalLength = Math.floor(Math.random() * 7) + 26;
+      const salt = new Date().toISOString(); // includes ms
+      const pools = Array.from({ length: 5 }, () => getRandomCharPool(64));
+
+      let password = '';
+      for (let i = 0; i < finalLength; i++) {
+        const pool = pools[Math.floor(Math.random() * pools.length)];
+        password += pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      const salted = password
+        .split('')
+        .map((char, i) => char + (salt[i] || ''))
+        .join('')
+        .slice(0, finalLength);
+
+      document.getElementById('password').textContent = salted;
+    }
+
+    function copyPassword() {
+      const password = document.getElementById('password').textContent;
+      navigator.clipboard.writeText(password).then(() => {
+        alert('Password copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy password.');
+      });
+    }
+  </script>
+</body>
+</html>
